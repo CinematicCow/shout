@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -93,47 +94,38 @@ func (s *Scanner) processFiles(writer io.Writer) error {
 			if err != nil {
 				return err
 			}
-
+			if strings.HasPrefix(filepath.Base(path), ".") && path != dir {
+				if info.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
 			if info.IsDir() {
 				return nil
 			}
-
 			for _, pattern := range s.SkipPatterns {
 				if matched, err := filepath.Match(pattern, filepath.Base(path)); err == nil && matched {
 					return nil
 				}
 			}
-
 			if len(s.Extensions) > 0 {
 				ext := strings.TrimPrefix(filepath.Ext(path), ".")
-				matched := false
-				for _, allowedExt := range s.Extensions {
-					if ext == allowedExt {
-						matched = true
-						break
-					}
-				}
-
+				matched := slices.Contains(s.Extensions, ext)
 				if !matched {
 					return nil
 				}
 			}
-
 			content, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
-
 			ext := strings.TrimPrefix(filepath.Ext(path), ".")
 			fmt.Fprintf(writer, "\n## File: %s\n```%s\n%s\n```\n", path, ext, string(content))
-
 			return nil
 		})
-
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/CinematicCow/shout/internal/scanner"
 	"github.com/CinematicCow/shout/internal/tui"
@@ -22,7 +23,16 @@ var (
 		Short:   "Project Dump for LLM analysis",
 		Long:    `Shout v` + version + ` - Generates a single Markdown file of your project for LLM analysis`,
 		Version: version,
-		RunE:    run,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 && !interactive && len(extensions) == 0 && len(directories) == 0 && len(skipPatterns) == 0 {
+				cmd.Help()
+				os.Exit(0)
+			}
+			if err := run(cmd, args); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+			}
+		},
 	}
 )
 
@@ -50,6 +60,21 @@ func run(cmd *cobra.Command, args []string) error {
 	if len(directories) == 0 {
 		directories = []string{"."}
 	}
+
+	if _, err := os.Stat(".gitignore"); err == nil {
+		content, err := os.ReadFile(".gitignore")
+		if err == nil {
+			lines := strings.Split(string(content), "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if line != "" && !strings.HasPrefix(line, "#") {
+					skipPatterns = append(skipPatterns, line)
+				}
+			}
+		}
+	}
+
+	skipPatterns = append(skipPatterns, ".*")
 
 	for _, dir := range directories {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
