@@ -10,7 +10,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Config holds the TUI configuration
 type Config struct {
 	Extensions   []string
 	Directories  []string
@@ -29,7 +28,6 @@ type model struct {
 	availableDirs []string
 }
 
-// Input field indices
 const (
 	extensionsInput = iota
 	directoriesInput
@@ -37,27 +35,47 @@ const (
 	outputInput
 )
 
+var (
+	focusedLabelStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#00FF00")).
+				Bold(true)
+	focusedBorderStyle = lipgloss.NewStyle().
+				Border(lipgloss.NormalBorder()).
+				BorderForeground(lipgloss.Color("#00FF00")).
+				Padding(0, 1)
+	errorStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FF0000")).
+			Bold(true)
+)
+
 func initialModel() model {
+
+	dirs, err := os.ReadDir(".")
+	availableDirs := []string{}
+	if err == nil {
+		for _, entry := range dirs {
+			if entry.IsDir() && !strings.HasPrefix(entry.Name(), ".") {
+				availableDirs = append(availableDirs, entry.Name())
+			}
+		}
+	}
+
 	var inputs []textinput.Model
 
-	// Extensions input
 	ti := textinput.New()
 	ti.Placeholder = "py,js,go,rs,ts"
-	ti.Focus()
 	ti.CharLimit = 100
 	ti.Width = 60
 	ti.Prompt = "Extensions: "
 	inputs = append(inputs, ti)
 
-	// Directories input
 	ti = textinput.New()
-	ti.Placeholder = "."
+	ti.Placeholder = strings.Join(availableDirs, ",")
 	ti.CharLimit = 100
 	ti.Width = 60
 	ti.Prompt = "Directories: "
 	inputs = append(inputs, ti)
 
-	// Skip patterns input
 	ti = textinput.New()
 	ti.Placeholder = "node_modules,*.tmp"
 	ti.CharLimit = 100
@@ -65,25 +83,13 @@ func initialModel() model {
 	ti.Prompt = "Skip patterns: "
 	inputs = append(inputs, ti)
 
-	// Output file input
 	ti = textinput.New()
-	ti.Placeholder = "shout.md"
+	ti.Placeholder = "llm.md"
 	ti.CharLimit = 100
 	ti.Width = 60
 	ti.Prompt = "Output file: "
-	ti.SetValue("shout.md")
+	ti.SetValue("llm.md")
 	inputs = append(inputs, ti)
-
-	// List available directories
-	dirs, err := os.ReadDir(".")
-	availableDirs := []string{}
-	if err == nil {
-		for _, entry := range dirs {
-			if entry.IsDir() {
-				availableDirs = append(availableDirs, entry.Name())
-			}
-		}
-	}
 
 	return model{
 		inputs:        inputs,
@@ -94,10 +100,12 @@ func initialModel() model {
 }
 
 func (m model) Init() tea.Cmd {
-	return textinput.Blink
+	return m.inputs[m.focusIndex].Focus()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -106,11 +114,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "tab", "shift+tab", "enter", "up", "down":
-			// Cycle between inputs
 			s := msg.String()
 
 			if s == "enter" && m.focusIndex == len(m.inputs)-1 {
-				// Process the form when Enter is pressed on the last input
 				m.processForm()
 				return m, tea.Quit
 			}
@@ -121,21 +127,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focusIndex++
 			}
 
-			if m.focusIndex >= len(m.inputs) {
+			if m.focusIndex > len(m.inputs)-1 {
 				m.focusIndex = 0
 			} else if m.focusIndex < 0 {
 				m.focusIndex = len(m.inputs) - 1
 			}
 
-			cmds := make([]tea.Cmd, len(m.inputs))
 			for i := range m.inputs {
-				if i == m.focusIndex {
-					cmds[i] = m.inputs[i].Focus()
-				} else {
-					m.inputs[i].Blur()
-				}
+				m.inputs[i].Blur()
 			}
 
+			cmds = append(cmds, m.inputs[m.focusIndex].Focus())
 			return m, tea.Batch(cmds...)
 		}
 
@@ -144,22 +146,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 	}
 
-	// Handle character input
 	cmd := m.updateInputs(msg)
 	return m, cmd
 }
 
 func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.inputs))
+	var cmds []tea.Cmd
 
-	// Only update the focused input
-	_, cmds[m.focusIndex] = m.inputs[m.focusIndex].Update(msg)
+	input, cmd := m.inputs[m.focusIndex].Update(msg)
+	m.inputs[m.focusIndex] = input
+	if cmd != nil {
+		cmds = append(cmds, cmd)
+	}
 
 	return tea.Batch(cmds...)
 }
 
 func (m *model) processForm() {
-	// Convert input values to config
+	if strings.TrimSpace(m.inputs[extensionsInput].Value()) == "" {
+		m.err = fmt.Errorf("no extensions provided")
+		return
+	}
+
+	m.err = nil
+
 	if val := m.inputs[extensionsInput].Value(); val != "" {
 		m.config.Extensions = splitCommaString(val)
 	}
@@ -177,7 +187,7 @@ func (m *model) processForm() {
 	if val := m.inputs[outputInput].Value(); val != "" {
 		m.config.OutputFile = val
 	} else {
-		m.config.OutputFile = "shout.md"
+		m.config.OutputFile = "llm.md"
 	}
 }
 
@@ -196,39 +206,38 @@ func (m model) View() string {
 
 	title := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Background(lipgloss.Color("#7D56F4")).
+		Foreground(lipgloss.Color("#00FF00")).
 		Padding(0, 1).
 		Render("Shout - Project Dump for LLMs")
-
-	help := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#626262")).
-		Render("Tab/Shift+Tab: Navigate • Enter: Submit • Esc/Ctrl+C: Quit")
 
 	var b strings.Builder
 	b.WriteString(title + "\n\n")
 
-	for i, input := range m.inputs {
-		b.WriteString(input.View() + "\n")
-
-		// Show available directories under the directories input
-		if i == directoriesInput && len(m.availableDirs) > 0 {
-			availableDirsText := fmt.Sprintf("Available: %s", strings.Join(m.availableDirs, ", "))
-			b.WriteString(lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#626262")).
-				Italic(true).
-				Render(availableDirsText) + "\n")
-		}
-
-		b.WriteString("\n")
+	if m.err != nil {
+		b.WriteString(errorStyle.Render("You must provide at least one extension before continuing.\n\n"))
 	}
 
-	b.WriteString("\n" + help)
+	for i, input := range m.inputs {
+		prompt := input.Prompt
+		content := input.View()[len(prompt):]
+
+		if i == m.focusIndex {
+			label := focusedLabelStyle.Render(prompt)
+			boxed := focusedBorderStyle.Render(content)
+			b.WriteString(label + "\n" + boxed + "\n\n")
+		} else {
+			b.WriteString(input.View() + "\n\n")
+		}
+	}
+
+	help := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#626262")).
+		Render("Tab/Shift+Tab: Navigate • Enter: Submit • Esc/Ctrl+C: Quit")
+	b.WriteString(help)
 
 	return b.String()
 }
 
-// StartTUI launches the TUI and returns the configuration
 func StartTUI() (Config, error) {
 	m := initialModel()
 	p := tea.NewProgram(m, tea.WithAltScreen())

@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	version      = "1.0.0"
+	version      = "1.0"
 	outFile      = "llm.md"
 	extensions   []string
 	directories  []string
@@ -88,14 +88,13 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Println("Generating project dump...")
 
 	s := scanner.New(extensions, directories, skipPatterns, outFile)
 	projectName := filepath.Base(getCurrentDir())
 	if err := s.Generate(outFile, projectName); err != nil {
 		return err
 	}
-	fmt.Printf("Generated: %s\n", outFile)
+	fmt.Println("DUMPED!")
 	return nil
 }
 
