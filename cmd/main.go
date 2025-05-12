@@ -57,6 +57,12 @@ func run(cmd *cobra.Command, args []string) error {
 		outFile = config.OutputFile
 	}
 
+	absOutFile, err := filepath.Abs(outFile)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path for output file: %v", err)
+	}
+	outFile = absOutFile
+
 	if len(directories) == 0 {
 		directories = []string{"."}
 	}
@@ -84,7 +90,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Generating project dump...")
 
-	s := scanner.New(extensions, directories, skipPatterns)
+	s := scanner.New(extensions, directories, skipPatterns, outFile)
 	projectName := filepath.Base(getCurrentDir())
 	if err := s.Generate(outFile, projectName); err != nil {
 		return err

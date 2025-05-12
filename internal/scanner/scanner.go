@@ -15,13 +15,15 @@ type Scanner struct {
 	Extensions   []string
 	Directories  []string
 	SkipPatterns []string
+	outFile      string
 }
 
-func New(extenstions, dirs, skip []string) *Scanner {
+func New(extenstions, dirs, skip []string, outFile string) *Scanner {
 	return &Scanner{
 		Extensions:   extenstions,
 		Directories:  dirs,
 		SkipPatterns: skip,
+		outFile:      outFile,
 	}
 }
 
@@ -89,6 +91,12 @@ func (s *Scanner) generateTree() (string, error) {
 }
 
 func (s *Scanner) processFiles(writer io.Writer) error {
+
+	absOutFile, err := filepath.Abs(s.outFile)
+	if err != nil {
+		return err
+	}
+
 	for _, dir := range s.Directories {
 		err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
@@ -100,6 +108,12 @@ func (s *Scanner) processFiles(writer io.Writer) error {
 				}
 				return nil
 			}
+
+			absPath, err := filepath.Abs(path)
+			if err == nil && absPath == absOutFile {
+				return nil
+			}
+
 			if info.IsDir() {
 				return nil
 			}
