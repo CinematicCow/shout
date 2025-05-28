@@ -73,8 +73,8 @@ func run(cmd *cobra.Command, args []string) error {
 	if _, err := os.Stat(".gitignore"); err == nil {
 		content, err := os.ReadFile(".gitignore")
 		if err == nil {
-			lines := strings.Split(string(content), "\n")
-			for _, line := range lines {
+			lines := strings.SplitSeq(string(content), "\n")
+			for line := range lines {
 				line = strings.TrimSpace(line)
 				if line != "" && !strings.HasPrefix(line, "#") {
 					skipPatterns = append(skipPatterns, line)
@@ -99,10 +99,12 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Generated %s (%d files processed in %v)\n", filepath.Base(outFile), stats.FilesProcessed, stats.Duration)
+	fmt.Printf("Generated: %s\n", filepath.Base(outFile))
+	fmt.Printf("Files: %d processed, %d skipped\n", stats.FilesProcessed, stats.FilesSkipped)
+	fmt.Printf("Time: %v\n", scanner.FormatDuration(stats.Duration))
 
 	if meta {
-		fmt.Printf("Meta information saved to %s\n", stats.MetaFile)
+		fmt.Printf("Meta File: %s\n", stats.MetaFile)
 	}
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"time"
 )
 
 func (s *Scanner) generateMeta(metaFile, name string, stats *Stats) error {
@@ -15,7 +16,7 @@ func (s *Scanner) generateMeta(metaFile, name string, stats *Stats) error {
 	fmt.Fprintf(file, "## Processed Files\n```\n%s```\n", s.generateMetaTree(stats.ProcessedFiles))
 
 	fmt.Fprintf(file, "## Statistics\n- Files processed: %d\n- Files skipped: %d\n- Generation time: %v\n\n",
-		stats.FilesProcessed, stats.FilesSkipped, stats.Duration)
+		stats.FilesProcessed, stats.FilesSkipped, FormatDuration(stats.Duration))
 
 	fmt.Fprintf(file, "## File Extensions\n| Extension | Count |\n|-----------|-------|\n")
 	exts := make([]string, 0, len(stats.FileStats))
@@ -34,4 +35,13 @@ func (s *Scanner) generateMeta(metaFile, name string, stats *Stats) error {
 		}
 	}
 	return nil
+}
+
+func FormatDuration(d time.Duration) string {
+	if d < time.Millisecond {
+		return d.Round(time.Microsecond).String()
+	} else if d < time.Second {
+		return d.Round(time.Millisecond).String()
+	}
+	return d.Round(time.Second).String()
 }

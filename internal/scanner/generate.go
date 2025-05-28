@@ -29,9 +29,10 @@ func (s *Scanner) Generate(outFile, name string, meta bool) (*Stats, error) {
 	stats.Duration = time.Since(start)
 
 	if meta {
-		metaFile := strings.TrimSuffix(outFile, filepath.Ext(outFile)) + ".meta.md"
+		metaFile := strings.TrimSuffix(filepath.Base(outFile), filepath.Ext(outFile)) + ".meta.md"
 		stats.MetaFile = metaFile
-		s.generateMeta(metaFile, name, stats)
+		metaPath := filepath.Join(filepath.Dir(outFile),metaFile)
+		s.generateMeta(metaPath, name, stats)
 	}
 	return stats, nil
 }
