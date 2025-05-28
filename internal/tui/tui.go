@@ -15,6 +15,7 @@ type Config struct {
 	Directories  []string
 	SkipPatterns []string
 	OutputFile   string
+	Meta         bool
 }
 
 type model struct {
@@ -33,6 +34,7 @@ const (
 	directoriesInput
 	skipInput
 	outputInput
+	metaInput
 )
 
 var (
@@ -89,6 +91,13 @@ func initialModel() model {
 	ti.Width = 60
 	ti.Prompt = "Output file: "
 	ti.SetValue("llm.md")
+	inputs = append(inputs, ti)
+
+	ti = textinput.New()
+	ti.Placeholder = "Y/n"
+	ti.CharLimit = 1
+	ti.Width = 60
+	ti.Prompt = "Generate Meta file? "
 	inputs = append(inputs, ti)
 
 	return model{
@@ -189,6 +198,9 @@ func (m *model) processForm() {
 	} else {
 		m.config.OutputFile = "llm.md"
 	}
+
+	metaVal := strings.ToLower(strings.TrimSpace(m.inputs[metaInput].Value()))
+	m.config.Meta = metaVal == "y" || metaVal == "yes"
 }
 
 func splitCommaString(s string) []string {
