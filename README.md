@@ -22,14 +22,14 @@ go build -o shout cmd/main.go
 shout [flags]
 ```
 
-| Flag              | Description                | Example               |
-|-------------------|----------------------------|-----------------------|
-| -e, --extensions  | File extensions to include | -e go,md              |
-| -d, --directories | Directories to scan        | -d cmd,internal       |
-| -s, --skip        | Patterns to skip           | -s node_modules,*.tmp |
-| -o, --output      | Output file path           | -o docs/project.md    |
-| -i, --interactive | Use interactive TUI mode   | -i                    |
-| -m, --meta        | Generate metadata file     | -m                    |
+| Flag              | Description                   | Example               |
+|-------------------|-------------------------------|-----------------------|
+| -e, --extensions  | File extensions to include    | -e go,md              |
+| -d, --directories | Directories and files to scan | -d cmd,internal       |
+| -s, --skip        | Patterns to skip              | -s node_modules,*.tmp |
+| -o, --output      | Output file path              | -o docs/project.md    |
+| -i, --interactive | Use interactive TUI mode      | -i                    |
+| -m, --meta        | Generate metadata file        | -m                    |
 
 ## Examples
 - Scan a go project excluding tests:
@@ -39,6 +39,10 @@ shout -e go -s *_test.go
 - Document multiple directories:
 ```
 shout -d src,lib -o documentation.md
+```
+- Scan and skip individual files:
+```
+shout -d src/routes,src/lib/count.ts -s src/utils/count.ts
 ```
 
 ### Output Format
@@ -64,6 +68,10 @@ Simply omit the `-e` flag to include all files
 #### Can I use wildcards in extensions?
 
 No, specify exact extensions: `-e go,js` not `*.go`
+
+#### How do I include few particular files ?
+
+Include the files with `-d` flag
 
 ## Authors
 
