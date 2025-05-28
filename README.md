@@ -1,5 +1,5 @@
 # SHOUT 📢
-A CLI tool to generate project dumps for LLM analysis in Markdown format.
+A CLI tool to generate project dumps for LLMs in Markdown format.
 
 ## Features
 
@@ -15,7 +15,7 @@ git clone https://github.com/CinematicCow/shout.git
 cd shout
 go build -o shout cmd/main.go
 ```
-    
+
 ## Usage
 
 ```sh
@@ -29,6 +29,7 @@ shout [flags]
 | -s, --skip        | Patterns to skip           | -s node_modules,*.tmp |
 | -o, --output      | Output file path           | -o docs/project.md    |
 | -i, --interactive | Use interactive TUI mode   | -i                    |
+| -m, --meta        | Generate metadata file     | -m                    |
 
 ## Examples
 - Scan a go project excluding tests:
