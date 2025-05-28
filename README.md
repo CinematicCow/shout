@@ -1,5 +1,5 @@
 # SHOUT 📢
-A CLI tool to generate project dumps for LLMs in Markdown format.
+A CLI tool to generate project dumps for LLMs in markdown format.
 
 ## Features
 
