@@ -18,6 +18,7 @@ var (
 	directories  []string
 	skipPatterns []string
 	interactive  bool
+	meta         bool
 	rootCmd      = &cobra.Command{
 		Use:     "shout",
 		Short:   "Project Dump for LLM analysis",
@@ -42,6 +43,7 @@ func init() {
 	rootCmd.Flags().StringSliceVarP(&skipPatterns, "skip", "s", nil, "Patterns to skip (comma-separated)")
 	rootCmd.Flags().StringVarP(&outFile, "output", "o", outFile, "Output file")
 	rootCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Use interactive TUI mode")
+	rootCmd.Flags().BoolVarP(&meta, "meta", "m", false, "Generate meta information file")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -55,6 +57,7 @@ func run(cmd *cobra.Command, args []string) error {
 		directories = config.Directories
 		skipPatterns = config.SkipPatterns
 		outFile = config.OutputFile
+		meta = config.Meta
 	}
 
 	absOutFile, err := filepath.Abs(outFile)
@@ -88,13 +91,20 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-
 	s := scanner.New(extensions, directories, skipPatterns, outFile)
 	projectName := filepath.Base(getCurrentDir())
-	if err := s.Generate(outFile, projectName); err != nil {
+
+	stats, err := s.Generate(outFile, projectName, meta)
+	if err != nil {
 		return err
 	}
-	fmt.Println("DUMPED!")
+
+	fmt.Printf("Generated %s (%d files processed in %v)\n", filepath.Base(outFile), stats.FilesProcessed, stats.Duration)
+
+	if meta {
+		fmt.Printf("Meta information saved to %s\n", stats.MetaFile)
+	}
+
 	return nil
 }
 
