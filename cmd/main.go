@@ -21,8 +21,8 @@ var (
 	meta         bool
 	rootCmd      = &cobra.Command{
 		Use:     "shout",
-		Short:   "Project Dump for LLM analysis",
-		Long:    `Shout v` + version + ` - Generates a single Markdown file of your project for LLM analysis`,
+		Short:   "Project Dump for LLMs",
+		Long:    `Shout v` + version + ` - Generates a single Markdown file of your project for LLMs`,
 		Version: version,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 && !interactive && len(extensions) == 0 && len(directories) == 0 && len(skipPatterns) == 0 {

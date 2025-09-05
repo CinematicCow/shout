@@ -102,6 +102,19 @@ func (s *Scanner) shouldSkip(path, absPath, cwd, absOutFile string, stats *Stats
 			stats.FilesSkipped++
 			return true
 		}
+
+		// Convert pattern to absolute path for proper directory matching
+		absPattern, err := filepath.Abs(pattern)
+		if err == nil {
+			// Ensure pattern ends with separator for directory matching
+			if !strings.HasSuffix(absPattern, string(filepath.Separator)) {
+				absPattern += string(filepath.Separator)
+			}
+			if strings.HasPrefix(absPath, absPattern) {
+				stats.FilesSkipped++
+				return true
+			}
+		}
 	}
 
 	if len(s.Extensions) > 0 {
