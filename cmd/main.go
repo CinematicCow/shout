@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/CinematicCow/shout/internal/clipboard"
 	"github.com/CinematicCow/shout/internal/scanner"
 	"github.com/CinematicCow/shout/internal/tui"
 	"github.com/spf13/cobra"
@@ -99,6 +100,10 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if err := clipboard.CopyFileToClipboard(outFile); err != nil {
+		return fmt.Errorf("failed to copy output file to clipboard: %w", err)
+	}
+
 	fmt.Printf("Generated: %s\n", filepath.Base(outFile))
 	fmt.Printf("Files: %d processed, %d skipped\n", stats.FilesProcessed, stats.FilesSkipped)
 	fmt.Printf("Time: %v\n", scanner.FormatDuration(stats.Duration))
@@ -106,6 +111,8 @@ func run(cmd *cobra.Command, args []string) error {
 	if meta {
 		fmt.Printf("Meta File: %s\n", stats.MetaFile)
 	}
+
+	fmt.Println("Output copied to clipboard")
 
 	return nil
 }
