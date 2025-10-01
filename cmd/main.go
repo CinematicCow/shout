@@ -8,28 +8,24 @@ import (
 
 	"github.com/CinematicCow/shout/internal/clipboard"
 	"github.com/CinematicCow/shout/internal/scanner"
-	"github.com/CinematicCow/shout/internal/tui"
 	"github.com/spf13/cobra"
 )
 
 var (
-	version      = "1.0"
+	version      = "0.21"
 	outFile      = "llm.md"
 	extensions   []string
 	directories  []string
 	skipPatterns []string
-	interactive  bool
 	meta         bool
+	git          bool
+	gitLimit     int
 	rootCmd      = &cobra.Command{
 		Use:     "shout",
 		Short:   "Project Dump for LLMs",
 		Long:    `Shout v` + version + ` - Generates a single Markdown file of your project for LLMs`,
 		Version: version,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 && !interactive && len(extensions) == 0 && len(directories) == 0 && len(skipPatterns) == 0 {
-				cmd.Help()
-				os.Exit(0)
-			}
 			if err := run(cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
@@ -43,24 +39,12 @@ func init() {
 	rootCmd.Flags().StringSliceVarP(&directories, "directories", "d", nil, "Directories to scan (comma-separated)")
 	rootCmd.Flags().StringSliceVarP(&skipPatterns, "skip", "s", nil, "Patterns to skip (comma-separated)")
 	rootCmd.Flags().StringVarP(&outFile, "output", "o", outFile, "Output file")
-	rootCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Use interactive TUI mode")
 	rootCmd.Flags().BoolVarP(&meta, "meta", "m", false, "Generate meta information file")
+	rootCmd.Flags().BoolVarP(&git, "git", "g", false, "Include git history in output")
+	rootCmd.Flags().IntVar(&gitLimit, "git-limit", 5, "Number of recent commits to include in git history")
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	if interactive {
-		config, err := tui.StartTUI()
-		if err != nil {
-			return err
-		}
-
-		extensions = config.Extensions
-		directories = config.Directories
-		skipPatterns = config.SkipPatterns
-		outFile = config.OutputFile
-		meta = config.Meta
-	}
-
 	absOutFile, err := filepath.Abs(outFile)
 	if err != nil {
 		return fmt.Errorf("failed to get absolute path for output file: %v", err)
@@ -95,7 +79,7 @@ func run(cmd *cobra.Command, args []string) error {
 	s := scanner.New(extensions, directories, skipPatterns, outFile)
 	projectName := filepath.Base(getCurrentDir())
 
-	stats, err := s.Generate(outFile, projectName, meta)
+	stats, err := s.Generate(outFile, projectName, meta, git, gitLimit)
 	if err != nil {
 		return err
 	}

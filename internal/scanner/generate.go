@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (s *Scanner) Generate(outFile, name string, meta bool) (*Stats, error) {
+func (s *Scanner) Generate(outFile, name string, meta bool, git bool, gitLimit int) (*Stats, error) {
 	start := time.Now()
 	file, _ := os.Create(outFile)
 	defer file.Close()
@@ -25,13 +25,20 @@ func (s *Scanner) Generate(outFile, name string, meta bool) (*Stats, error) {
 	tree, _ := s.generateTree(s.Directories)
 	fmt.Fprintf(file, "## Project Structure\n```\n%s\n```\n", tree)
 
+	if git {
+		commits, err := GetGit(gitLimit)
+		if err == nil {
+			fmt.Fprintf(file, "%s\n", FormatGit(commits))
+		}
+	}
+
 	s.processFiles(file, stats)
 	stats.Duration = time.Since(start)
 
 	if meta {
 		metaFile := strings.TrimSuffix(filepath.Base(outFile), filepath.Ext(outFile)) + ".meta.md"
 		stats.MetaFile = metaFile
-		metaPath := filepath.Join(filepath.Dir(outFile),metaFile)
+		metaPath := filepath.Join(filepath.Dir(outFile), metaFile)
 		s.generateMeta(metaPath, name, stats)
 	}
 	return stats, nil
