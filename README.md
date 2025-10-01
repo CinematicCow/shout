@@ -6,8 +6,9 @@ A CLI tool to generate project dumps for LLMs in markdown format.
 - Generates structured markdown of your project
 - Supports file filtering by extension
 - Excludes specified directories and patterns
-- Interactive TUI mode available
+- Add recent commit history for better context
 - Preserves project structure in output
+
 ## Installation
 
 ```sh
@@ -28,8 +29,9 @@ shout [flags]
 | -d, --directories | Directories and files to scan | -d cmd,internal       |
 | -s, --skip        | Patterns to skip              | -s node_modules,*.tmp |
 | -o, --output      | Output file path              | -o docs/project.md    |
-| -i, --interactive | Use interactive TUI mode      | -i                    |
 | -m, --meta        | Generate metadata file        | -m                    |
+| -g, --git         | Include git history in output | -g                    |
+|     --git-limit   | Number of recent commits      | --git-limit 10        |
 
 ## Examples
 - Scan a go project excluding tests:
@@ -44,13 +46,13 @@ shout -d src,lib -o documentation.md
 ```
 shout -d src/routes,src/lib/count.ts -s src/utils/count.ts
 ```
-
 ### Output Format
 The generated markdown includes:
 
 - Project structure tree
 - All source files with syntax highlighting
 - Organized by directory structure
+
 ## FAQ
 
 #### How do I exclude multiple patterns?
