@@ -11,6 +11,14 @@ import (
 func (s *Scanner) Generate(outFile, name string, meta bool, git bool, gitLimit int) (*Stats, error) {
 	start := time.Now()
 
+	confirmed, err := confirmOverwrite(outFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get overwrite confirmation: %w", err)
+	}
+	if !confirmed {
+		return nil, fmt.Errorf("file overwrite declined")
+	}
+
 	file, err := os.Create(outFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output file: %w", err)

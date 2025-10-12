@@ -8,6 +8,14 @@ import (
 )
 
 func (s *Scanner) generateMeta(metaFile, name string, stats *Stats) error {
+	confirmed, err := confirmOverwrite(metaFile)
+	if err != nil {
+		return fmt.Errorf("failed to get overwrite confirmation for meta file: %w", err)
+	}
+	if !confirmed {
+		return fmt.Errorf("meta file overwrite declined")
+	}
+
 	file, err := os.Create(metaFile)
 	if err != nil {
 		return fmt.Errorf("failed to create meta file: %w", err)
