@@ -19,12 +19,20 @@ var (
 	meta         bool
 	git          bool
 	gitLimit     int
+	force        bool
 	rootCmd      = &cobra.Command{
 		Use:     "shout",
 		Short:   "Project Dump for LLMs",
 		Long:    `Shout v` + version + ` - Generates a single Markdown file of your project for LLMs`,
 		Version: version,
 		Run: func(cmd *cobra.Command, args []string) {
+			if cmd.Flags().NFlag() == 0 {
+				if err := cmd.Help(); err != nil {
+					fmt.Fprintf(os.Stderr, "Error displaying help: %v\n", err)
+				}
+				return
+			}
+
 			if err := run(cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
@@ -41,6 +49,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&meta, "meta", "m", false, "Generate meta information file")
 	rootCmd.Flags().BoolVarP(&git, "git", "g", false, "Include git history in output")
 	rootCmd.Flags().IntVar(&gitLimit, "git-limit", 5, "Number of recent commits to include in git history")
+	rootCmd.Flags().BoolVar(&force, "force", false, "Force overwrite without confirmation")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -78,20 +87,19 @@ func run(cmd *cobra.Command, args []string) error {
 	s := scanner.New(extensions, directories, skipPatterns, outFile)
 	projectName := filepath.Base(getCurrentDir())
 
-	stats, err := s.Generate(outFile, projectName, meta, git, gitLimit)
+	stats, err := s.Generate(outFile, projectName, meta, git, gitLimit, force)
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Generated: %s\n", filepath.Base(outFile))
 	fmt.Printf("Files: %d processed, %d skipped\n", stats.FilesProcessed, stats.FilesSkipped)
+	fmt.Printf("Estimated tokens: %d\n", stats.TotalTokens)
 	fmt.Printf("Time: %v\n", scanner.FormatDuration(stats.Duration))
 
 	if meta {
 		fmt.Printf("Meta File: %s\n", stats.MetaFile)
 	}
-
-	fmt.Println("Output copied to clipboard")
 
 	return nil
 }

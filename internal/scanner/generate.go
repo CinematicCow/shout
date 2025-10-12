@@ -8,12 +8,31 @@ import (
 	"time"
 )
 
-func (s *Scanner) Generate(outFile, name string, meta bool, git bool, gitLimit int) (*Stats, error) {
+func (s *Scanner) Generate(outFile, name string, meta bool, git bool, gitLimit int, force bool) (*Stats, error) {
 	start := time.Now()
-	file, _ := os.Create(outFile)
-	defer file.Close()
 
-	fmt.Fprintf(file, "# Project: %s\n\n", name)
+	confirmed, err := confirmOverwrite(outFile, force)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get overwrite confirmation: %w", err)
+	}
+	if !confirmed {
+		return nil, fmt.Errorf("file overwrite declined")
+	}
+
+	file, err := os.Create(outFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create output file: %w", err)
+	}
+
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			fmt.Fprintf(os.Stderr, "Error closing file: %v\n", cerr)
+		}
+	}()
+
+	if _, err := fmt.Fprintf(file, "# Project: %s\n\n", name); err != nil {
+		return nil, fmt.Errorf("failed to write to file: %w", err)
+	}
 
 	stats := &Stats{
 		FileStats:      make(map[string]int),
@@ -23,23 +42,32 @@ func (s *Scanner) Generate(outFile, name string, meta bool, git bool, gitLimit i
 	}
 
 	tree, _ := s.generateTree(s.Directories)
-	fmt.Fprintf(file, "## Project Structure\n```\n%s\n```\n", tree)
+
+	if _, err := fmt.Fprintf(file, "## Project Structure\n```\n%s\n```\n", tree); err != nil {
+		return nil, fmt.Errorf("failed to write to file: %w", err)
+	}
 
 	if git {
 		commits, err := GetGit(gitLimit)
 		if err == nil {
-			fmt.Fprintf(file, "%s\n", FormatGit(commits))
+			if _, err := fmt.Fprintf(file, "%s\n", FormatGit(commits)); err != nil {
+				return nil, fmt.Errorf("failed to write to file: %w", err)
+			}
 		}
 	}
 
-	s.processFiles(file, stats)
+	if err := s.processFiles(file, stats); err != nil {
+		return nil, fmt.Errorf("failed to process files: %w", err)
+	}
 	stats.Duration = time.Since(start)
 
 	if meta {
 		metaFile := strings.TrimSuffix(filepath.Base(outFile), filepath.Ext(outFile)) + ".meta.md"
 		stats.MetaFile = metaFile
 		metaPath := filepath.Join(filepath.Dir(outFile), metaFile)
-		s.generateMeta(metaPath, name, stats)
+		if err := s.generateMeta(metaPath, name, stats, force); err != nil {
+			return nil, fmt.Errorf("failed to generate meta file: %w", err)
+		}
 	}
 	return stats, nil
 }
