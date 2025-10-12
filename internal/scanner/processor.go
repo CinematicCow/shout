@@ -27,14 +27,18 @@ func (s *Scanner) processFiles(writer io.Writer, stats *Stats) error {
 		}
 
 		if info.IsDir() {
-			filepath.Walk(absPath, func(walkPath string, info fs.FileInfo, err error) error {
+			if err := filepath.Walk(absPath, func(walkPath string, info fs.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
 				return s.processFile(walkPath, info, writer, stats, cwd, absOutFile, processedFiles)
-			})
+			}); err != nil {
+				return fmt.Errorf("failed to walk directory %s: %w", absPath, err)
+			}
 		} else {
-			s.processFile(absPath, info, writer, stats, cwd, absOutFile, processedFiles)
+			if err := s.processFile(absPath, info, writer, stats, cwd, absOutFile, processedFiles); err != nil {
+				return fmt.Errorf("failed to process file %s: %w", absPath, err)
+			}
 		}
 	}
 	return nil
@@ -65,7 +69,9 @@ func (s *Scanner) processFile(path string, info fs.FileInfo, writer io.Writer, s
 	}
 
 	ext := strings.TrimPrefix(filepath.Ext(path), ".")
-	fmt.Fprintf(writer, "\n## File: %s\n```%s\n%s\n```\n", path, ext, content)
+	if _, err := fmt.Fprintf(writer, "\n## File: %s\n```%s\n%s\n```\n", path, ext, content); err != nil {
+		return fmt.Errorf("failed to write file content to writer: %w", err)
+	}
 
 	stats.FilesProcessed++
 	stats.ProcessedFiles = append(stats.ProcessedFiles, path)

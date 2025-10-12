@@ -91,8 +91,6 @@ func run(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Meta File: %s\n", stats.MetaFile)
 	}
 
-	fmt.Println("Output copied to clipboard")
-
 	return nil
 }
 
