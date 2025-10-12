@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-func (s *Scanner) Generate(outFile, name string, meta bool, git bool, gitLimit int) (*Stats, error) {
+func (s *Scanner) Generate(outFile, name string, meta bool, git bool, gitLimit int, force bool) (*Stats, error) {
 	start := time.Now()
 
-	confirmed, err := confirmOverwrite(outFile)
+	confirmed, err := confirmOverwrite(outFile, force)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get overwrite confirmation: %w", err)
 	}
@@ -65,7 +65,7 @@ func (s *Scanner) Generate(outFile, name string, meta bool, git bool, gitLimit i
 		metaFile := strings.TrimSuffix(filepath.Base(outFile), filepath.Ext(outFile)) + ".meta.md"
 		stats.MetaFile = metaFile
 		metaPath := filepath.Join(filepath.Dir(outFile), metaFile)
-		if err := s.generateMeta(metaPath, name, stats); err != nil {
+		if err := s.generateMeta(metaPath, name, stats, force); err != nil {
 			return nil, fmt.Errorf("failed to generate meta file: %w", err)
 		}
 	}

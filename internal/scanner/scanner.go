@@ -24,7 +24,11 @@ func New(extensions, dirs, skip []string, outFile string) *Scanner {
 	}
 }
 
-func confirmOverwrite(filePath string) (bool, error) {
+func confirmOverwrite(filePath string, force bool) (bool, error) {
+	if force {
+		return true, nil
+	}
+
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return true, nil
 	}

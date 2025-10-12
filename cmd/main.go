@@ -19,6 +19,7 @@ var (
 	meta         bool
 	git          bool
 	gitLimit     int
+	force        bool
 	rootCmd      = &cobra.Command{
 		Use:     "shout",
 		Short:   "Project Dump for LLMs",
@@ -41,6 +42,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&meta, "meta", "m", false, "Generate meta information file")
 	rootCmd.Flags().BoolVarP(&git, "git", "g", false, "Include git history in output")
 	rootCmd.Flags().IntVar(&gitLimit, "git-limit", 5, "Number of recent commits to include in git history")
+	rootCmd.Flags().BoolVar(&force, "force", false, "Force overwrite without confirmation")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -78,7 +80,7 @@ func run(cmd *cobra.Command, args []string) error {
 	s := scanner.New(extensions, directories, skipPatterns, outFile)
 	projectName := filepath.Base(getCurrentDir())
 
-	stats, err := s.Generate(outFile, projectName, meta, git, gitLimit)
+	stats, err := s.Generate(outFile, projectName, meta, git, gitLimit, force)
 	if err != nil {
 		return err
 	}

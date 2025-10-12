@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-func (s *Scanner) generateMeta(metaFile, name string, stats *Stats) error {
-	confirmed, err := confirmOverwrite(metaFile)
+func (s *Scanner) generateMeta(metaFile, name string, stats *Stats, force bool) error {
+	confirmed, err := confirmOverwrite(metaFile, force)
 	if err != nil {
 		return fmt.Errorf("failed to get overwrite confirmation for meta file: %w", err)
 	}
