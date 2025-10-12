@@ -26,6 +26,13 @@ var (
 		Long:    `Shout v` + version + ` - Generates a single Markdown file of your project for LLMs`,
 		Version: version,
 		Run: func(cmd *cobra.Command, args []string) {
+			if cmd.Flags().NFlag() == 0 {
+				if err := cmd.Help(); err != nil {
+					fmt.Fprintf(os.Stderr, "Error displaying help: %v\n", err)
+				}
+				return
+			}
+
 			if err := run(cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
