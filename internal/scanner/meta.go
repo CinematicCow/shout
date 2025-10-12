@@ -36,8 +36,8 @@ func (s *Scanner) generateMeta(metaFile, name string, stats *Stats) error {
 		return fmt.Errorf("failed to write to file: %w", err)
 	}
 
-	if _, err := fmt.Fprintf(file, "## Statistics\n- Files processed: %d\n- Files skipped: %d\n- Generation time: %v\n\n",
-		stats.FilesProcessed, stats.FilesSkipped, FormatDuration(stats.Duration)); err != nil {
+	if _, err := fmt.Fprintf(file, "## Statistics\n- Files processed: %d\n- Files skipped: %d\n- Generation time: %v\n- Total Estimated tokens: %d\n\n",
+		stats.FilesProcessed, stats.FilesSkipped, FormatDuration(stats.Duration), stats.TotalTokens); err != nil {
 		return fmt.Errorf("failed to write to file: %w", err)
 	}
 

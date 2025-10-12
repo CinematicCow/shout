@@ -85,6 +85,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Generated: %s\n", filepath.Base(outFile))
 	fmt.Printf("Files: %d processed, %d skipped\n", stats.FilesProcessed, stats.FilesSkipped)
+	fmt.Printf("Estimated tokens: %d\n", stats.TotalTokens)
 	fmt.Printf("Time: %v\n", scanner.FormatDuration(stats.Duration))
 
 	if meta {

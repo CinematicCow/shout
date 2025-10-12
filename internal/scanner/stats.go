@@ -15,6 +15,7 @@ type Stats struct {
 	ProcessedFiles []string
 	SkipPatterns   []string
 	Command        string
+	TotalTokens    int
 }
 
 func BuildCommand() string {

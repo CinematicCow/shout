@@ -68,6 +68,9 @@ func (s *Scanner) processFile(path string, info fs.FileInfo, writer io.Writer, s
 		return err
 	}
 
+	fileTokens := EstimateTokens(content)
+	stats.TotalTokens += fileTokens
+
 	ext := strings.TrimPrefix(filepath.Ext(path), ".")
 	if _, err := fmt.Fprintf(writer, "\n## File: %s\n```%s\n%s\n```\n", path, ext, content); err != nil {
 		return fmt.Errorf("failed to write file content to writer: %w", err)
