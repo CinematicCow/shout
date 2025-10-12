@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/CinematicCow/shout/internal/clipboard"
 	"github.com/CinematicCow/shout/internal/scanner"
 	"github.com/spf13/cobra"
 )
@@ -82,10 +81,6 @@ func run(cmd *cobra.Command, args []string) error {
 	stats, err := s.Generate(outFile, projectName, meta, git, gitLimit)
 	if err != nil {
 		return err
-	}
-
-	if err := clipboard.CopyFileToClipboard(outFile); err != nil {
-		return fmt.Errorf("failed to copy output file to clipboard: %w", err)
 	}
 
 	fmt.Printf("Generated: %s\n", filepath.Base(outFile))
