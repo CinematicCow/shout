@@ -6,7 +6,7 @@ BUILD_DIR=.
 all: build
 
 build:
-	go build -o $(BUILD_DIR)/$(BINARY_NAME) cmd/main.go
+	go build -o $(BUILD_DIR)/$(BINARY_NAME) main.go
 
 install:
 	./scripts/symlink.sh

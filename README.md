@@ -14,7 +14,7 @@ A CLI tool to generate project dumps for LLMs in markdown format.
 ```sh
 git clone https://github.com/CinematicCow/shout.git
 cd shout
-go build -o shout cmd/main.go
+go build -o shout main.go
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ shout [flags]
 | Flag              | Description                   | Example               |
 |-------------------|-------------------------------|-----------------------|
 | -e, --extensions  | File extensions to include    | -e go,md              |
-| -d, --directories | Directories and files to scan | -d cmd,internal       |
+| -d, --directories | Directories and files to scan | -d internal           |
 | -s, --skip        | Patterns to skip              | -s node_modules,*.tmp |
 | -o, --output      | Output file path              | -o docs/project.md    |
 | -m, --meta        | Generate metadata file        | -m                    |
